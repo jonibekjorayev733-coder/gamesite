@@ -9,7 +9,10 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(100), unique=True, nullable=False, index=True)
+    email = Column(String(100), unique=True, nullable=True, index=True)
+    full_name = Column(String(255), nullable=True)
     password_hash = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
 
 
 class Teacher(Base):
@@ -75,11 +78,12 @@ class CustomTest(Base):
     id = Column(Integer, primary_key=True, index=True)
     teacher_id = Column(Integer, ForeignKey("teachers.id"), nullable=False)
     game_slug = Column(String(50), nullable=False, index=True)
-    question = Column(Text, nullable=False)
-    options = Column(JSON, nullable=False)  # JSON array of 4 strings
-    correct_index = Column(Integer, nullable=False)  # 0-3
+    question = Column(Text, nullable=False)  # Title for new format
+    options = Column(JSON, nullable=True)  # JSON array of 4 strings (optional)
+    correct_index = Column(Integer, nullable=True)  # 0-3 (optional)
     explanation = Column(Text, nullable=True)
     difficulty = Column(String(20), default="medium")
+    test_data = Column(JSON, nullable=True)  # Full test structure: {title, description, questions[]}
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -132,3 +136,26 @@ class TestResult(Base):
 
     user = relationship("AuthAccount", back_populates="user_results", foreign_keys=[user_id])
     test = relationship("TeacherTest", back_populates="results", foreign_keys=[test_id])
+
+
+class UserGame(Base):
+    """Track user game sessions and scores"""
+    __tablename__ = "user_games"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    username = Column(String(100), nullable=True, index=True)  # Username for easy lookup
+    game_slug = Column(String(50), nullable=False, index=True)  # e.g., "wheel", "tug_of_war"
+    email = Column(String(100), nullable=True)  # Store email for easy lookup
+    score = Column(Integer, default=0)
+    mode = Column(String(20), default="single")  # "single" or "team"
+    team1_score = Column(Integer, default=0)
+    team2_score = Column(Integer, default=0)
+    questions_answered = Column(Integer, default=0)
+    correct_answers = Column(Integer, default=0)
+    game_data = Column(JSON, nullable=True)  # Store game metadata
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = relationship("User")
+

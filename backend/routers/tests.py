@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
 
 from database import get_db
 from models import Section, Test, User
@@ -9,6 +10,13 @@ from auth import get_current_user
 router = APIRouter()
 
 TESTS_PER_SECTION_LIMIT = 20
+
+
+@router.get("/", response_model=List[TestResponse])
+def get_tests(db: Session = Depends(get_db)):
+    """Get all tests"""
+    tests = db.query(Test).all()
+    return tests
 
 
 @router.post("/", response_model=TestResponse, status_code=status.HTTP_201_CREATED)

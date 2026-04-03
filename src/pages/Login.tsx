@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogIn, Mail, Lock, Sparkles, ArrowRight } from "lucide-react";
 
@@ -130,9 +130,12 @@ export default function Login() {
             <div className="mt-6 text-center">
               <p className="text-slate-400 text-sm">
                 Hisobingiz yo'q?{" "}
-                <a href="#" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors underline-offset-4 hover:underline">
+                <Link
+                  to="/register"
+                  className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors underline-offset-4 hover:underline"
+                >
                   Ro'yxatdan o'ting
-                </a>
+                </Link>
               </p>
             </div>
           </div>

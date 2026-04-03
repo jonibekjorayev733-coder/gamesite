@@ -239,19 +239,32 @@ export default function BarabanGameV2() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/game-tests/baraban/questions?count=8");
+      const response = await fetch("http://localhost:8000/api/game-tests/wheel/questions?count=8");
       if (!response.ok) throw new Error(`Backend xatosi: HTTP ${response.status}`);
       const data = await response.json();
+      
       if (data && data.questions && data.questions.length > 0) {
-        setQuestions(data.questions);
+        // Transform backend format to component format
+        const transformedQuestions = data.questions.map((q: any) => ({
+          id: q.id,
+          q: q.prompt,
+          opts: q.options.map((opt: any) => opt.text || opt),
+          correct: q.correct_index,
+          difficulty: q.difficulty || "O'rta",
+          explanation: q.explanation || "To'g'ri javob",
+          points: 10,
+        }));
+        setQuestions(transformedQuestions);
       } else {
-        throw new Error("Backend savollari bo'sh");
+        // Fallback to mock data if backend returns empty
+        setQuestions(MOCK_QUESTIONS.slice(0, 8));
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Noma'lum xato";
       console.error("Savollari yuklashda xato:", errorMsg);
-      setError(`❌ Server ishlamayapti`);
-      setQuestions([]);
+      // Use mock data as fallback
+      setQuestions(MOCK_QUESTIONS.slice(0, 8));
+      setError(null); // Don't show error if fallback works
     } finally {
       setLoading(false);
     }
@@ -921,6 +934,19 @@ export default function BarabanGameV2() {
 
   // Question Screen
   if (phase === "question") {
+    if (!questions || questions.length === 0 || currentQuestion >= questions.length) {
+      return (
+        <GameProLayout accentColor="purple">
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-cyan-400" />
+              <p className="text-xl text-cyan-300">Savollari yuklanyapti...</p>
+            </div>
+          </div>
+        </GameProLayout>
+      );
+    }
+    
     const question = questions[currentQuestion];
     const isCorrect = selectedAnswer === question.correct;
 
@@ -1010,62 +1036,68 @@ export default function BarabanGameV2() {
               }}
             >
               <h2 className="text-2xl font-black text-cyan-300">
-                {question.q}
+                {question && question.q ? question.q : "Savol yuklanyapti..."}
               </h2>
             </div>
 
             {/* Options */}
             <div className="p-8 space-y-3">
-              {question.opts.map((option, idx) => {
-                const isSelected = selectedAnswer === idx;
-                const isAnswered = answered;
-                const isCorrectOption = idx === question.correct;
-                let buttonStyle = {};
+              {question && question.opts && question.opts.length > 0 ? (
+                question.opts.map((option, idx) => {
+                  const isSelected = selectedAnswer === idx;
+                  const isAnswered = answered;
+                  const isCorrectOption = idx === question.correct;
+                  let buttonStyle = {};
 
-                if (isAnswered) {
-                  if (isCorrectOption) {
-                    buttonStyle = {
-                      background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                      borderColor: "#00d4ff",
-                      boxShadow: "0 0 20px #22c55e, 0 0 40px rgba(34, 197, 94, 0.3)",
-                      color: "#fff",
-                    };
+                  if (isAnswered) {
+                    if (isCorrectOption) {
+                      buttonStyle = {
+                        background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                        borderColor: "#00d4ff",
+                        boxShadow: "0 0 20px #22c55e, 0 0 40px rgba(34, 197, 94, 0.3)",
+                        color: "#fff",
+                      };
+                    } else if (isSelected) {
+                      buttonStyle = {
+                        background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                        borderColor: "#ef4444",
+                        boxShadow: "0 0 20px #ef4444, 0 0 40px rgba(239, 68, 68, 0.3)",
+                        color: "#fff",
+                      };
+                    }
                   } else if (isSelected) {
                     buttonStyle = {
-                      background: "linear-gradient(135deg, #ef4444, #dc2626)",
-                      borderColor: "#ef4444",
-                      boxShadow: "0 0 20px #ef4444, 0 0 40px rgba(239, 68, 68, 0.3)",
+                      background: "linear-gradient(135deg, #9333ea, #7e22ce)",
+                      borderColor: "#c026d3",
+                      boxShadow: "0 0 20px #c026d3, 0 0 40px rgba(192, 38, 211, 0.3)",
                       color: "#fff",
                     };
+                  } else {
+                    buttonStyle = {
+                      background: "rgba(0, 212, 255, 0.05)",
+                      borderColor: "rgba(0, 212, 255, 0.3)",
+                      boxShadow: "0 0 10px rgba(0, 212, 255, 0.1)",
+                      color: "#e0f7ff",
+                    };
                   }
-                } else if (isSelected) {
-                  buttonStyle = {
-                    background: "linear-gradient(135deg, #9333ea, #7e22ce)",
-                    borderColor: "#c026d3",
-                    boxShadow: "0 0 20px #c026d3, 0 0 40px rgba(192, 38, 211, 0.3)",
-                    color: "#fff",
-                  };
-                } else {
-                  buttonStyle = {
-                    background: "rgba(0, 212, 255, 0.05)",
-                    borderColor: "rgba(0, 212, 255, 0.3)",
-                    boxShadow: "0 0 10px rgba(0, 212, 255, 0.1)",
-                    color: "#e0f7ff",
-                  };
-                }
 
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => !isAnswered && handleAnswer(idx)}
-                    disabled={isAnswered && !isCorrectOption && !isSelected}
-                    className="w-full p-4 rounded-xl font-black text-left transition-all border-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={buttonStyle}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => !isAnswered && handleAnswer(idx)}
+                      disabled={isAnswered && !isCorrectOption && !isSelected}
+                      className="w-full p-4 rounded-xl font-black text-left transition-all border-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={buttonStyle}
+                    >
+                      {option}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-cyan-300">
+                  Savollari topib bolmadi
+                </div>
+              )}
             </div>
           </div>
 

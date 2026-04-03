@@ -118,6 +118,10 @@ def seed():
                 db.refresh(section)
                 print(f"Created section: {section_name} (game_id={game_id})")
 
+            # Get the game slug for game_key
+            game = db.query(Game).filter(Game.id == game_id).first()
+            game_slug = game.slug if game else section_name.lower()
+
             for q, opts, correct in tests_data:
                 exists = db.query(Test).filter(
                     Test.section_id == section.id,
@@ -126,6 +130,7 @@ def seed():
                 if not exists:
                     db.add(Test(
                         section_id=section.id,
+                        game_key=game_slug,
                         question=q,
                         options=opts,
                         correct_index=correct

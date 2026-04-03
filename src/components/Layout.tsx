@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Home, Gamepad2, Trophy, Shield, LogOut, LogIn, User, Zap, Send, Instagram, Sun, Moon } from "lucide-react";
+import UserProfileDropdown from "@/components/UserProfileDropdown";
 import { useState } from "react";
 
 interface LayoutProps {
@@ -116,32 +117,22 @@ export default function Layout({ children }: LayoutProps) {
 
               {user ? (
                 <>
-                  <Link to="/profile">
-                    <Button className="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2 rounded-lg font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
-                      <User className="w-4 h-4" />
-                      {user.name}
-                    </Button>
-                  </Link>
-                  <Link to="/profile" className="sm:hidden">
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 rounded-lg">
-                      <User className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                  <Button
-                    size="sm"
-                    className="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg transition-all duration-300 hover:scale-105"
-                    onClick={() => logout()}
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </Button>
+                  <UserProfileDropdown userName={user.name} />
                 </>
               ) : (
-                <Link to="/login">
-                  <Button className="hidden sm:flex bg-white/15 hover:bg-white/25 text-white gap-2 rounded-lg font-semibold border border-white/20 transition-all duration-300 hover:scale-105" style={{ boxShadow: "0 0 25px -5px rgba(255,255,255,0.15)" }}>
-                    <LogIn className="w-4 h-4" />
-                    Kirish
-                  </Button>
-                </Link>
+                <>
+                  <Link to="/login" className="hidden sm:block">
+                    <Button className="bg-white/15 hover:bg-white/25 text-white gap-2 rounded-lg font-semibold border border-white/20 transition-all duration-300 hover:scale-105" style={{ boxShadow: "0 0 25px -5px rgba(255,255,255,0.15)" }}>
+                      <LogIn className="w-4 h-4" />
+                      Kirish
+                    </Button>
+                  </Link>
+                  <Link to="/register" className="hidden sm:block">
+                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2 rounded-lg font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
+                      Ro'yxatdan O'tish
+                    </Button>
+                  </Link>
+                </>
               )}
 
               {/* Mobile Menu Button */}
@@ -183,6 +174,29 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                 );
               })}
+              {!user && (
+                <>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-lg font-semibold transition-all duration-300 bg-white/15 hover:bg-white/25 text-white border border-white/20">
+                    <LogIn className="w-4 h-4 inline mr-2" />
+                    Kirish
+                  </Link>
+                  <Link to="/register" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-lg font-semibold transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                    Ro'yxatdan O'tish
+                  </Link>
+                </>
+              )}
+              {user && (
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-300 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/30 flex items-center gap-2 justify-center"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Chiqish
+                </button>
+              )}
             </div>
           )}
         </div>

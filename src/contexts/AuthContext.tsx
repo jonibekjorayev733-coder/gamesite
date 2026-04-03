@@ -70,22 +70,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const register = useCallback(async (email: string, fullName: string, password: string) => {
+    try {
+      const response = await fetch("http://localhost:8000/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          full_name: fullName,
+          password: password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Registration failed");
+      }
+
+      const data = await response.json();
+      
+      if (!data.access_token) {
+        throw new Error("Invalid response from server");
+      }
+
+      // Create user object with full name
+      const newUser: User = {
+        id: email,
+        name: fullName,
+        email,
+        role: "student",
+        points: 0,
+        rank: 999,
+      };
+
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
+      localStorage.setItem("token", data.access_token);
+    } catch (error) {
+      console.error("Register error:", error);
+      throw error;
+    }
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem("user");
-  }, []);
-
-  const register = useCallback(async (name: string, email: string, password: string) => {
-    const newUser: User = {
-      id: Math.random().toString(),
-      name,
-      email,
-      role: "student",
-      points: 0,
-      rank: 999,
-    };
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
+    localStorage.removeItem("token");
   }, []);
 
   const updateUser = useCallback((updates: Partial<User>) => {

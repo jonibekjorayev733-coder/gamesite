@@ -12,8 +12,16 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    email: str
+    full_name: str
+    password: str
+
+
 class UserBase(BaseModel):
     username: str
+    email: str | None = None
+    full_name: str | None = None
 
 
 class UserCreate(UserBase):

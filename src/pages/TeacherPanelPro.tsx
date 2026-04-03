@@ -11,6 +11,7 @@ import {
   Trophy,
   Trash2,
   Loader2,
+  Edit2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ const emptyQuestion = (): QuestionForm => ({
   explanation: "",
 });
 
-const API_BASE = "/api";
+const API_BASE = "http://localhost:8000/api";
 
 async function api<T>(path: string, token: string | null, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
@@ -100,6 +101,10 @@ export default function TeacherPanelPro() {
   const [loadingTeacher, setLoadingTeacher] = useState(false);
   const [loadingTests, setLoadingTests] = useState(false);
 
+  const [games, setGames] = useState<Array<{id: number; name: string; slug: string; test_count: number}>>([]);
+  const [selectedGameId, setSelectedGameId] = useState<string>("");
+  const [selectedGameSlug, setSelectedGameSlug] = useState<string>("");
+  
   const [form, setForm] = useState<{
     title: string;
     description: string;
@@ -110,6 +115,9 @@ export default function TeacherPanelPro() {
     questions: [emptyQuestion()],
   });
   const [submittingTest, setSubmittingTest] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [editingTestId, setEditingTestId] = useState<string | null>(null);
+  const [editingTest, setEditingTest] = useState<TestDoc | null>(null);
 
   const [topUsers, setTopUsers] = useState<
     Array<{
@@ -152,8 +160,10 @@ export default function TeacherPanelPro() {
         const data = await api<{ teacher: Teacher }>("/auth/teacher/me", token);
         setTeacher(data.teacher);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Teacher ma'lumot olinmadi");
-        navigate("/teacher/auth");
+        // Silently fail - teacher panel is optional
+        console.log("Teacher auth failed:", e instanceof Error ? e.message : "Unknown error");
+        setTeacher(null);
+        // Don't navigate away - let user see the main app
       } finally {
         setLoadingTeacher(false);
       }
@@ -165,8 +175,28 @@ export default function TeacherPanelPro() {
     if (!token) return;
     try {
       setLoadingTests(true);
-      const data = await api<{ tests: TestDoc[] }>("/tests", token);
-      setTests(data.tests || []);
+      
+      // Fetch teacher's own tests
+      const testsData = await api<{ tests: TestDoc[] }>("/tests", token);
+      setTests(testsData.tests || []);
+      
+      // Also fetch all games for the dropdown selector
+      const gamesData = await api<{ games: Array<{id: number; name: string; slug: string; test_count: number}> }>("/all-games-with-tests", token);
+      
+      if (gamesData.games) {
+        setGames(gamesData.games.map(g => ({
+          id: g.id,
+          name: g.name,
+          slug: g.slug,
+          test_count: g.test_count
+        })));
+        
+        // Auto-select first game
+        if (gamesData.games.length > 0 && !selectedGameId) {
+          setSelectedGameId(String(gamesData.games[0].id));
+          setSelectedGameSlug(gamesData.games[0].slug);
+        }
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Testlar yuklanmadi");
       setTests([]);
@@ -185,7 +215,13 @@ export default function TeacherPanelPro() {
     try {
       setLoadingTopUsers(true);
       const data = await api<{
-        topUsers: Array<{
+        top_users?: Array<{
+          user_id: string;
+          username: string;
+          total_score: number;
+          games_played: number;
+        }>;
+        topUsers?: Array<{
           userId: string;
           totalScore: number;
           attempts: number;
@@ -193,13 +229,16 @@ export default function TeacherPanelPro() {
           fullName: string;
         }>;
       }>("/results/top-users", token);
+      
+      // Handle both new and old response formats
+      const users = data.top_users || data.topUsers || [];
       setTopUsers(
-        (data.topUsers || []).map((u) => ({
-          userId: String(u.userId),
-          totalScore: Number(u.totalScore || 0),
-          attempts: Number(u.attempts || 0),
+        users.map((u: any) => ({
+          userId: String(u.user_id || u.userId || ""),
+          totalScore: Number(u.total_score || u.totalScore || 0),
+          attempts: Number(u.games_played || u.attempts || 0),
           email: u.email || "",
-          fullName: u.fullName || "",
+          fullName: u.fullName || u.username || "",
         }))
       );
     } catch (e) {
@@ -281,14 +320,27 @@ export default function TeacherPanelPro() {
           correctIndex: q.correctIndex,
           explanation: q.explanation?.trim() || "",
         })),
+        game_slug: selectedGameSlug,
       };
 
-      await api("/tests", token, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-
-      toast.success("Test qo'shildi!");
+      if (editingTestId) {
+        // Update existing test
+        await api(`/tests/${editingTestId}`, token, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+        toast.success("Test o'zgartirildi!");
+        setEditingTestId(null);
+        setEditingTest(null);
+      } else {
+        // Create new test
+        await api("/tests", token, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        toast.success("Test qo'shildi!");
+      }
+      
       setForm({ title: "", description: "", questions: [emptyQuestion()] });
       await fetchTests();
     } catch (e) {
@@ -296,6 +348,23 @@ export default function TeacherPanelPro() {
     } finally {
       setSubmittingTest(false);
     }
+  };
+
+  const handleEditTest = (test: TestDoc) => {
+    setEditingTestId(test._id);
+    setEditingTest(test);
+    setForm({
+      title: test.title,
+      description: test.description || "",
+      questions: test.questions || [emptyQuestion()],
+    });
+    setActiveTab("test-add");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTestId(null);
+    setEditingTest(null);
+    setForm({ title: "", description: "", questions: [emptyQuestion()] });
   };
 
   const handleDeleteTest = async (testId: string) => {
@@ -439,15 +508,39 @@ export default function TeacherPanelPro() {
                     <div className="lg:col-span-3">
                       <Card className="glass-card p-6">
                         <div className="flex items-center justify-between mb-5">
-                          <div className="font-black text-xl">Create Test</div>
+                          <div className="font-black text-xl">
+                            {editingTestId ? "Edit Test" : "Create Test"}
+                          </div>
                           <div className="text-xs text-slate-400">
-                            {submittingTest ? "Saving..." : "MongoDB"
-                            }
+                            {submittingTest ? "Saving..." : "MongoDB"}
                           </div>
                         </div>
 
                         <div className="space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label className="block">
+                              <span className="text-sm font-semibold text-slate-200">O'yin tanlang</span>
+                              <select
+                                value={selectedGameId}
+                                onChange={(e) => {
+                                  const gameId = e.target.value;
+                                  setSelectedGameId(gameId);
+                                  const game = games.find(g => String(g.id) === gameId);
+                                  if (game) {
+                                    setSelectedGameSlug(game.slug);
+                                  }
+                                }}
+                                className="mt-2 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-500/20"
+                              >
+                                <option value="">O'yinni tanlang...</option>
+                                {games.map(game => (
+                                  <option key={game.id} value={game.id}>
+                                    {game.name} ({game.test_count} testlar)
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+
                             <label className="block">
                               <span className="text-sm font-semibold text-slate-200">Test title</span>
                               <input
@@ -457,17 +550,73 @@ export default function TeacherPanelPro() {
                                 placeholder="Masalan: 20-savol — Umumiy test"
                               />
                             </label>
-
-                            <label className="block">
-                              <span className="text-sm font-semibold text-slate-200">Description</span>
-                              <input
-                                value={form.description}
-                                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                                className="mt-2 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-500/20"
-                                placeholder="Optional"
-                              />
-                            </label>
                           </div>
+
+                          <div>
+                            <Button
+                              onClick={async () => {
+                                if (!selectedGameSlug) {
+                                  toast.error("Avval o'yinni tanlang");
+                                  return;
+                                }
+                                
+                                setGeneratingAI(true);
+                                try {
+                                  // Call AI generation endpoint
+                                  const response = await api<{
+                                    questions: Array<{
+                                      text: string;
+                                      options: [string, string, string, string];
+                                      correctIndex: number;
+                                      explanation: string;
+                                    }>;
+                                  }>(`/ai/generate-tests/${selectedGameSlug}?count=5`, token, {
+                                    method: "POST",
+                                  });
+                                  
+                                  if (response.questions && response.questions.length > 0) {
+                                    setForm((p) => ({
+                                      ...p,
+                                      questions: response.questions.map(q => ({
+                                        text: q.text,
+                                        options: q.options,
+                                        correctIndex: q.correctIndex,
+                                        explanation: q.explanation,
+                                      })),
+                                    }));
+                                    toast.success(`${response.questions.length} ta savol AI orqali yaratildi!`);
+                                  }
+                                } catch (e) {
+                                  toast.error(e instanceof Error ? e.message : "AI test yaratishda xato");
+                                } finally {
+                                  setGeneratingAI(false);
+                                }
+                              }}
+                              disabled={!selectedGameSlug || generatingAI}
+                              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl disabled:opacity-50 w-full"
+                            >
+                              {generatingAI ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  AI test yaratmoqda...
+                                </>
+                              ) : (
+                                <>
+                                  ✨ AI bilan 5 test yaratish
+                                </>
+                              )}
+                            </Button>
+                          </div>
+
+                          <label className="block">
+                            <span className="text-sm font-semibold text-slate-200">Description</span>
+                            <input
+                              value={form.description}
+                              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                              className="mt-2 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-500/20"
+                              placeholder="Optional"
+                            />
+                          </label>
 
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-semibold text-slate-200">Questions</div>
@@ -600,7 +749,7 @@ export default function TeacherPanelPro() {
                             ))}
                           </div>
 
-                          <div className="pt-2">
+                          <div className="pt-2 space-y-2">
                             <Button
                               onClick={handleSubmitTest}
                               disabled={submittingTest}
@@ -611,10 +760,21 @@ export default function TeacherPanelPro() {
                                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                   Saving...
                                 </span>
+                              ) : editingTestId ? (
+                                "Update Test"
                               ) : (
                                 "Save Test"
                               )}
                             </Button>
+                            {editingTestId && (
+                              <Button
+                                onClick={handleCancelEdit}
+                                disabled={submittingTest}
+                                className="w-full bg-slate-500/20 hover:bg-slate-500/30 border border-slate-400/20 text-slate-300 rounded-xl font-black py-4 transition-all"
+                              >
+                                Cancel Edit
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </Card>
@@ -643,15 +803,23 @@ export default function TeacherPanelPro() {
                                   <div className="min-w-0">
                                     <div className="font-black truncate">{t.title}</div>
                                     <div className="text-xs text-slate-400 mt-1">
-                                      {t.questions.length} questions
+                                      {(t.questions || []).length} questions
                                     </div>
                                   </div>
-                                  <button
-                                    onClick={() => handleDeleteTest(t._id)}
-                                    className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 transition-all"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleEditTest(t)}
+                                      className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 transition-all"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteTest(t._id)}
+                                      className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 transition-all"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             ))}

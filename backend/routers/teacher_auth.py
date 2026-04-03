@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import jwt
@@ -9,6 +10,7 @@ from models import Teacher
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/teacher", tags=["teacher-auth"])
+security = HTTPBearer()
 
 SECRET_KEY = "your-secret-key-change-in-production"
 ALGORITHM = "HS256"
@@ -175,10 +177,11 @@ def login(data: TeacherLogin):
 
 
 @router.get("/me", response_model=TeacherResponse)
-def get_me(token: str):
+def get_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Joriy o'qituvchi ma'lumotlarini olish"""
     db = SessionLocal()
     try:
+        token = credentials.credentials
         teacher = get_current_teacher(token, db)
         return TeacherResponse.from_orm(teacher)
     finally:

@@ -6,18 +6,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Use SQLite for development
+# Use PostgreSQL (Neon) or SQLite for development
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "sqlite:///./test.db"
 )
 
-engine = create_engine(
-    DATABASE_URL, 
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
-)
+# PostgreSQL requires pool settings
+if "postgresql" in DATABASE_URL:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_size=10,
+        max_overflow=20,
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL, 
+        connect_args={"check_same_thread": False}
+    )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 
 def get_db():

@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Layout from "@/components/Layout";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import Games from "@/pages/Games";
 import Leaderboard from "@/pages/Leaderboard";
 import PlayerProfile from "@/pages/PlayerProfile";
@@ -38,6 +39,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout><Home /></Layout>} />
             <Route path="/login" element={<Layout><Login /></Layout>} />
+            <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/teacher/auth" element={<TeacherAuth />} />
             <Route path="/teacher/panel" element={<TeacherPanelPro />} />
             <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
