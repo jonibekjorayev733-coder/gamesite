@@ -1,38 +1,45 @@
-import express from 'express';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import http from 'http';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from dist directory
-app.use(express.static(join(__dirname, 'dist')));
+const mimeTypes = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
 
-// API proxy - redirect to backend
-app.use('/api', (req, res) => {
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
-  const proxyUrl = new URL(req.originalUrl, backendUrl);
-  
-  fetch(proxyUrl, {
-    method: req.method,
-    headers: req.headers,
-    body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : undefined,
-  })
-    .then(response => {
-      res.status(response.status);
-      response.headers.forEach((value, name) => res.setHeader(name, value));
-      response.body.pipe(res);
-    })
-    .catch(err => res.status(500).json({ error: err.message }));
+const server = http.createServer((req, res) => {
+  let filePath = path.join(__dirname, 'dist', req.url === '/' ? 'index.html' : req.url);
+
+  // Serve file if it exists
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const ext = path.extname(filePath).toLowerCase();
+    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    res.end(fs.readFileSync(filePath));
+  } else {
+    // Fallback to index.html for SPA routing
+    filePath = path.join(__dirname, 'dist', 'index.html');
+    if (fs.existsSync(filePath)) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(fs.readFileSync(filePath));
+    } else {
+      res.writeHead(404);
+      res.end('Not Found');
+    }
+  }
 });
 
-// SPA fallback - serve index.html for all routes
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
