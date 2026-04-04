@@ -1,26 +1,35 @@
-from database import SessionLocal
-from models import Teacher
-from auth import verify_password, get_password_hash
+import requests
 
-db = SessionLocal()
+# Test login
+url = "http://localhost:8000/api/auth/teacher/login"
 
-# Get teacher
-teacher = db.query(Teacher).filter(Teacher.email == 'admin@example.com').first()
-print(f"Teacher found: {teacher}")
-print(f"Email: {teacher.email if teacher else 'N/A'}")
-print(f"Password hash: {teacher.password_hash if teacher else 'N/A'}")
+# Database'da bor teachers:
+# teacher@example.com (password: password123)
+# admin@teacher.com (password: admin123)
 
-if teacher:
-    # Test password verification
-    test_pass = "admin123"
-    result = verify_password(test_pass, teacher.password_hash)
-    print(f"\nPassword verification:")
-    print(f"  Test password: {test_pass}")
-    print(f"  Stored hash: {teacher.password_hash}")
-    print(f"  Result: {result}")
-    
-    # Also test creating a new hash
-    print(f"\nTesting hash creation:")
-    new_hash = get_password_hash("admin123")
-    print(f"  New hash: {new_hash}")
-    print(f"  Verify new: {verify_password('admin123', new_hash)}")
+test_cases = [
+    {"email": "teacher@example.com", "password": "password123"},
+    {"email": "admin@teacher.com", "password": "admin123"},
+]
+
+print("Testing teacher login endpoint...\n")
+
+for test in test_cases:
+    print(f"Testing: {test['email']}")
+    try:
+        response = requests.post(
+            url,
+            json=test,
+            timeout=5
+        )
+        print(f"  Status: {response.status_code}")
+        if response.ok:
+            data = response.json()
+            print(f"  ✓ Login successful!")
+            print(f"  Token: {data['access_token'][:20]}...")
+            print(f"  Teacher: {data['teacher']['email']}")
+        else:
+            print(f"  ✗ Error: {response.text}")
+    except Exception as e:
+        print(f"  ✗ Error: {e}")
+    print()
