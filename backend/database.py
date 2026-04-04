@@ -6,11 +6,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Use PostgreSQL (Neon) or SQLite for development
+# Use PostgreSQL (Neon) or in-memory SQLite for Render
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "sqlite:///./test.db"
+    None
 )
+
+# Agar DATABASE_URL bo'lmasa in-memory SQLite ishlatamiz (Render uchun)
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///:memory:"
 
 # PostgreSQL requires pool settings
 if "postgresql" in DATABASE_URL:
