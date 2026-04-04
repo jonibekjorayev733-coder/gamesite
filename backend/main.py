@@ -2,14 +2,21 @@ from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import sys
 
-from database import engine, Base
-import models  # Import models to register them with SQLAlchemy
-from routers import auth, games, sections, tests, game_tests, teacher_auth, custom_tests, teacher_tests_api
-from routers import dashboard_auth, dashboard_tests, dashboard_results, user_games
-
-# Create tables
-Base.metadata.create_all(bind=engine)
+try:
+    from database import engine, Base
+    import models  # Import models to register them with SQLAlchemy
+    from routers import auth, games, sections, tests, game_tests, teacher_auth, custom_tests, teacher_tests_api
+    from routers import dashboard_auth, dashboard_tests, dashboard_results, user_games
+    
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Error loading database/models: {e}", file=sys.stderr)
+    # Continue anyway for basic endpoints
+    engine = None
+    Base = None
 
 app = FastAPI(title="Vite Project API", version="1.0.0")
 
@@ -34,19 +41,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, tags=["auth"])
-app.include_router(teacher_auth.router, prefix="/api/auth", tags=["teacher-auth"])
-app.include_router(dashboard_auth.router, tags=["dashboard-auth-v2"])
-app.include_router(games.router, prefix="/games", tags=["games"])
-app.include_router(sections.router, prefix="/sections", tags=["sections"])
-app.include_router(tests.router, prefix="/legacy/tests", tags=["tests-legacy"])
-app.include_router(tests.router, prefix="/api", tags=["tests-api"])
-app.include_router(teacher_tests_api.router, prefix="/api", tags=["teacher-tests-api"])
-app.include_router(dashboard_tests.router, tags=["dashboard-tests-v2"])
-app.include_router(dashboard_results.router, tags=["dashboard-results-v2"])
-app.include_router(game_tests.router, tags=["game-tests"])
-app.include_router(custom_tests.router, tags=["custom-tests"])
-app.include_router(user_games.router, tags=["user-games"])
+# Load routers safely
+try:
+    app.include_router(auth.router, tags=["auth"])
+    app.include_router(teacher_auth.router, prefix="/api/auth", tags=["teacher-auth"])
+    app.include_router(dashboard_auth.router, tags=["dashboard-auth-v2"])
+    app.include_router(games.router, prefix="/games", tags=["games"])
+    app.include_router(sections.router, prefix="/sections", tags=["sections"])
+    app.include_router(tests.router, prefix="/legacy/tests", tags=["tests-legacy"])
+    app.include_router(tests.router, prefix="/api", tags=["tests-api"])
+    app.include_router(teacher_tests_api.router, prefix="/api", tags=["teacher-tests-api"])
+    app.include_router(dashboard_tests.router, tags=["dashboard-tests-v2"])
+    app.include_router(dashboard_results.router, tags=["dashboard-results-v2"])
+    app.include_router(game_tests.router, tags=["game-tests"])
+    app.include_router(custom_tests.router, tags=["custom-tests"])
+    app.include_router(user_games.router, tags=["user-games"])
+except Exception as e:
+    print(f"Error loading routers: {e}", file=sys.stderr)
+    import traceback
+    traceback.print_exc()
 
 
 @app.get("/")
