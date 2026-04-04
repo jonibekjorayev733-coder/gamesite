@@ -1,2 +1,0 @@
-# This file is empty - Node.js project only
-# Kept for compatibility with Render's build detection
