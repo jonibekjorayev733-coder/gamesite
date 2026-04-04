@@ -12,6 +12,41 @@ try:
     
     # Create tables
     Base.metadata.create_all(bind=engine)
+    
+    # Seed test teachers on startup
+    from database import SessionLocal
+    from passlib.context import CryptContext
+    
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    
+    def seed_teachers():
+        db = SessionLocal()
+        try:
+            teacher_count = db.query(models.Teacher).count()
+            if teacher_count == 0:
+                teachers_data = [
+                    {"username": "teacher1", "email": "teacher1@example.com", "full_name": "Teacher One", "password": "password123"},
+                    {"username": "teacher2", "email": "teacher2@example.com", "full_name": "Teacher Two", "password": "password123"},
+                    {"username": "admin", "email": "admin@example.com", "full_name": "Admin Teacher", "password": "admin123"},
+                ]
+                for data in teachers_data:
+                    teacher = models.Teacher(
+                        username=data["username"],
+                        email=data["email"],
+                        full_name=data["full_name"],
+                        password_hash=pwd_context.hash(data["password"])
+                    )
+                    db.add(teacher)
+                db.commit()
+                print(f"Seeded {len(teachers_data)} test teachers")
+        except Exception as e:
+            print(f"Teacher seeding error: {e}")
+            db.rollback()
+        finally:
+            db.close()
+    
+    seed_teachers()
+    
 except Exception as e:
     print(f"Error loading database/models: {e}", file=sys.stderr)
     # Continue anyway for basic endpoints
