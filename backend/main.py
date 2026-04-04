@@ -1,6 +1,7 @@
 from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from database import engine, Base
 import models  # Import models to register them with SQLAlchemy
@@ -12,9 +13,22 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Vite Project API", version="1.0.0")
 
+# CORS configuration
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://gamesite-1.onrender.com",
+    "https://gamebecend.onrender.com",
+]
+
+# Add frontend URL from environment if provided
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url and frontend_url not in allowed_origins:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
