@@ -15,30 +15,33 @@ try:
     
     # Seed test teachers on startup
     from database import SessionLocal
-    from passlib.context import CryptContext
-    
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     def seed_teachers():
         db = SessionLocal()
         try:
+            # Don't seed if teachers already exist
             teacher_count = db.query(models.Teacher).count()
-            if teacher_count == 0:
-                teachers_data = [
-                    {"username": "teacher1", "email": "teacher1@example.com", "full_name": "Teacher One", "password": "password123"},
-                    {"username": "teacher2", "email": "teacher2@example.com", "full_name": "Teacher Two", "password": "password123"},
-                    {"username": "admin", "email": "admin@example.com", "full_name": "Admin Teacher", "password": "admin123"},
-                ]
-                for data in teachers_data:
-                    teacher = models.Teacher(
-                        username=data["username"],
-                        email=data["email"],
-                        full_name=data["full_name"],
-                        password_hash=pwd_context.hash(data["password"])
-                    )
-                    db.add(teacher)
-                db.commit()
-                print(f"Seeded {len(teachers_data)} test teachers")
+            print(f"Found {teacher_count} existing teachers in database")
+            if teacher_count > 0:
+                print("Skipping teacher seeding - database already populated")
+                return
+            
+            # Only seed if database is empty
+            teachers_data = [
+                {"username": "teacher1", "email": "teacher1@example.com", "full_name": "Teacher One"},
+                {"username": "teacher2", "email": "teacher2@example.com", "full_name": "Teacher Two"},
+                {"username": "admin", "email": "admin@example.com", "full_name": "Admin Teacher"},
+            ]
+            for data in teachers_data:
+                teacher = models.Teacher(
+                    username=data["username"],
+                    email=data["email"],
+                    full_name=data["full_name"],
+                    hashed_password="$2b$12$placeholder"  # Placeholder - set via API
+                )
+                db.add(teacher)
+            db.commit()
+            print(f"Seeded {len(teachers_data)} test teachers")
         except Exception as e:
             print(f"Teacher seeding error: {e}")
             db.rollback()

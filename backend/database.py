@@ -22,11 +22,13 @@ else:
 # Create engine based on database type
 try:
     if "postgresql" in DATABASE_URL:
+        from sqlalchemy.pool import NullPool
         engine = create_engine(
             DATABASE_URL,
-            pool_pre_ping=True,
-            pool_size=10,
-            max_overflow=20,
+            poolclass=NullPool,  # Neon pooler'dan foydalanish uchun
+            connect_args={
+                "connect_timeout": 5,
+            }
         )
     else:
         engine = create_engine(
