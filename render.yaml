@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: gamesite
+    runtime: node
+    runtimeVersion: 22.22.0
+    buildCommand: npm install && npm run build
+    startCommand: node server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
