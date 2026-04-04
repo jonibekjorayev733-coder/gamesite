@@ -1,5 +1,0 @@
-{
-  "buildCommand": "npm install && npm run build",
-  "publishDirectory": "dist",
-  "startCommand": "python app.py"
-}
