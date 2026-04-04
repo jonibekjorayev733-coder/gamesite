@@ -103,6 +103,23 @@ def root():
     return {"message": "Interaktiv-ta'lim API", "version": "1.0"}
 
 
+@app.get("/api/health")
+def health_check():
+    """Health check endpoint"""
+    return {"status": "ok", "database": "in-memory-sqlite"}
+
+
+@app.get("/api/auth/health")
+def auth_health():
+    """Auth router health check"""
+    return {"status": "auth router is active"}
+
+
+@app.get("/")
+def root():
+    return {"message": "Interaktiv-ta'lim API", "version": "1.0"}
+
+
 @app.get("/api/tests")
 def get_api_tests():
     """Get all tests for API - compatibility endpoint"""
