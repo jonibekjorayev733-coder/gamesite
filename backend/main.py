@@ -25,6 +25,7 @@ allowed_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://gamesite-1.onrender.com",
+    "https://gamesite-42tb.onrender.com",
     "https://gamebecend.onrender.com",
 ]
 
