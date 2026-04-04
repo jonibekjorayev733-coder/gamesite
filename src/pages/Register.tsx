@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { LogIn, Mail, Lock, User, Sparkles, ArrowRight } from "lucide-react";
+import { LogIn, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { getApiUrl } from "@/api/client";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -11,7 +11,6 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,8 +37,25 @@ export default function Register() {
     }
 
     try {
-      await register(email, fullName, password);
-      navigate("/");
+      const response = await fetch(getApiUrl("/api/auth/teacher/register"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          full_name: fullName,
+          password,
+          username: email.split("@")[0],
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || "Ro'yhatdan o'tishda xatolik");
+      }
+
+      navigate("/teacher/auth");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Ro'yhatdan o'tishda xatolik");
       console.error("Register error:", error);
