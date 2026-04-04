@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Trophy } from "lucide-react";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -153,7 +154,7 @@ export default function MillionaireGame() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/game-tests/millionaire/questions?count=10");
+      const response = await fetch(getApiUrl("/api/game-tests/millionaire/questions?count=10"));
       if (!response.ok) {
         throw new Error(`Backend xatosi: HTTP ${response.status}`);
       }

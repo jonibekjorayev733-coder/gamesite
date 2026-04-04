@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Home, Plus, Users, BarChart3, Settings, LogOut, BookOpen } from "lucide-react";
+import { getApiUrl } from "@/api/client";
 
 export default function TeacherDashboard() {
   const [activeMenu, setActiveMenu] = useState("add-test");
@@ -135,7 +136,7 @@ function AddTestContent() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/teacher-tests/create", {
+      const response = await fetch(getApiUrl("/api/teacher-tests/create"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -302,7 +303,7 @@ function MyTestsContent() {
   const fetchTests = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/teacher-tests/my-tests", {
+      const response = await fetch(getApiUrl("/api/teacher-tests/my-tests"), {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

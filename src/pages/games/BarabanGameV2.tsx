@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Volume2, Loader2, User, Users, Trophy, RotateCcw, Home, Star, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import GameProLayout from "@/components/games/GameProLayout";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -239,7 +240,7 @@ export default function BarabanGameV2() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/game-tests/wheel/questions?count=8");
+      const response = await fetch(getApiUrl("/api/game-tests/wheel/questions?count=8"));
       if (!response.ok) throw new Error(`Backend xatosi: HTTP ${response.status}`);
       const data = await response.json();
       

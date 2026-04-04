@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Volume2, RotateCw } from "lucide-react";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -31,7 +32,7 @@ export default function BarabanGame() {
 
   const fetchQuestions = async () => {
     try {
-      const response = await fetch("http://localhost:8000/games/questions/baraban?difficulty=Oson");
+      const response = await fetch(getApiUrl("/games/questions/baraban?difficulty=Oson"));
       const data = await response.json();
       if (data && data.length > 0) {
         setQuestions(data.slice(0, 10));

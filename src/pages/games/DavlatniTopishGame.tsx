@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Loader2, Globe, User, Users, Trophy, RotateCcw, Home, Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -76,7 +77,7 @@ export default function DavlatniTopishGame() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/game-tests/davlatni_topish/questions?count=10");
+      const res = await fetch(getApiUrl("/api/game-tests/davlatni_topish/questions?count=10"));
       if (!res.ok) throw new Error("Server xatosi");
       const data = await res.json();
       if (data?.questions?.length > 0) {

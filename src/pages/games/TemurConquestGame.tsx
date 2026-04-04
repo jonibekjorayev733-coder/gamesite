@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import GameProLayout from '@/components/games/GameProLayout';
+import { getApiUrl } from '@/api/client';
 
 interface Question {
   id: number;
@@ -100,7 +101,7 @@ export default function TemurConquestGame() {
   useEffect(() => {
     const fetchCustomTests = async () => {
       try {
-        const response = await fetch('http://localhost:8000/custom-tests/game/temur-conquest');
+        const response = await fetch(getApiUrl('/custom-tests/game/temur-conquest'));
         if (!response.ok) {
           throw new Error("Server ishlamayapti");
         }

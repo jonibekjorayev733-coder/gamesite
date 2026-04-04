@@ -12,6 +12,8 @@ import {
   BarChart3,
 } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
 interface Game {
   id: number;
   name: string;
@@ -89,7 +91,7 @@ export default function TeacherPanel() {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:8000/custom-tests/my-tests/${selectedGame!.slug}?token=${token}`
+        `${API_BASE}/custom-tests/my-tests/${selectedGame!.slug}?token=${token}`
       );
       
       if (!response.ok) {
@@ -129,7 +131,7 @@ export default function TeacherPanel() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/custom-tests/create?token=" + token, {
+      const response = await fetch(`${API_BASE}/custom-tests/create?token=${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -189,7 +191,7 @@ export default function TeacherPanel() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/custom-tests/${testId}?token=${token}`,
+        `${API_BASE}/custom-tests/${testId}?token=${token}`,
         { method: "DELETE" }
       );
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Trophy } from "lucide-react";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -120,7 +121,7 @@ export default function ChempionOquvchiGame() {
   const loadQuestions = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/games/questions/chempion");
+      const response = await fetch(getApiUrl("/games/questions/chempion"));
       const data = await response.json();
       if (data && data.length > 0) {
         setQuestions(data.slice(0, 8));

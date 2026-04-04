@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import GameProLayout from "@/components/games/GameProLayout";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -121,7 +122,7 @@ export default function KrosswordGame() {
 
   const loadQuestions = async () => {
     try {
-      const response = await fetch("http://localhost:8000/games/questions/krossword");
+      const response = await fetch(getApiUrl("/games/questions/krossword"));
       const data = await response.json();
       if (data && data.length > 0) {
         setQuestions(data.slice(0, 10));

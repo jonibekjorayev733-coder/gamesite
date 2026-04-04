@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Gem, DollarSign } from "lucide-react";
 import GameProLayout from "@/components/games/GameProLayout";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -148,7 +149,7 @@ export default function BilimliOquvchi() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/game-tests/bilimli_oquvchi/questions?count=20");
+      const response = await fetch(getApiUrl("/api/game-tests/bilimli_oquvchi/questions?count=20"));
       if (!response.ok) {
         throw new Error(`Backend xatosi: HTTP ${response.status}`);
       }

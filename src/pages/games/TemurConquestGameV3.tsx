@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { RotateCcw, Home, Volume2, MapPin } from 'lucide-react';
+import { getApiUrl } from '@/api/client';
 
 interface Question {
   id: string;
@@ -110,7 +111,7 @@ export default function TemurConquestGameV3() {
   useEffect(() => {
     const fetchCustomTests = async () => {
       try {
-        const response = await fetch('http://localhost:8000/custom-tests/game/temur-conquest');
+        const response = await fetch(getApiUrl('/custom-tests/game/temur-conquest'));
         if (!response.ok) throw new Error("Server ishlamayapti");
         const customTests = await response.json();
         const transformedTests: Question[] = customTests.map((test: any, idx: number) => ({

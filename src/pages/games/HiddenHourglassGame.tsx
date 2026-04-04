@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { getApiUrl } from '@/api/client';
 
 interface Question {
   id: number;
@@ -109,7 +110,7 @@ export default function HiddenHourglassGame() {
   useEffect(() => {
     const fetchCustomTests = async () => {
       try {
-        const response = await fetch('http://localhost:8000/custom-tests/game/hidden-hourglass');
+        const response = await fetch(getApiUrl('/custom-tests/game/hidden-hourglass'));
         if (!response.ok) {
           throw new Error("Server ishlamayapti");
         }

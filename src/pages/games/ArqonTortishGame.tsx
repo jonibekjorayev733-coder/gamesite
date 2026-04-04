@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flag, Handshake, Loader2, Volume2 } from "lucide-react";
 import GameProLayout from "@/components/games/GameProLayout";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -162,7 +163,7 @@ export default function ArqonTortishGame() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/game-tests/yugurish_poyezdi/questions?count=10");
+        const response = await fetch(getApiUrl("/api/game-tests/yugurish_poyezdi/questions?count=10"));
       if (!response.ok) {
         throw new Error(`Backend xatosi: HTTP ${response.status}`);
       }

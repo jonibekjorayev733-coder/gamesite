@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mail, Lock, User, GraduationCap } from "lucide-react";
+import { getApiUrl } from "@/api/client";
 
 interface LoginData {
   email: string;
@@ -38,7 +39,7 @@ export default function TeacherAuth() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/auth/teacher/login", {
+      const response = await fetch(getApiUrl("/api/auth/teacher/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -79,7 +80,7 @@ export default function TeacherAuth() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/auth/teacher/register", {
+      const response = await fetch(getApiUrl("/api/auth/teacher/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

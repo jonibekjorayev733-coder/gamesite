@@ -5,6 +5,7 @@ import { Home, Sparkles, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import GameProLayout from "@/components/games/GameProLayout";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: number;
@@ -59,7 +60,7 @@ export default function HiddenHourglassGameV2() {
 
   const fetchQuestions = async () => {
     try {
-      const response = await fetch("http://localhost:8000/custom-tests/game/hidden-hourglass");
+      const response = await fetch(getApiUrl("/custom-tests/game/hidden-hourglass"));
       const data = await response.json();
       if (data && data.length > 0) {
         setQuestions(data.slice(0, 10));
