@@ -7,7 +7,7 @@ import sys
 try:
     from database import engine, Base
     import models  # Import models to register them with SQLAlchemy
-    from routers import auth, games, sections, tests, game_tests, teacher_auth, custom_tests, teacher_tests_api
+    from routers import games, sections, tests, game_tests, teacher_auth, custom_tests, teacher_tests_api
     from routers import dashboard_auth, dashboard_tests, dashboard_results, user_games
     
     # Create tables
@@ -79,7 +79,6 @@ app.add_middleware(
 
 # Load routers safely
 try:
-    app.include_router(auth.router, tags=["auth"])
     app.include_router(teacher_auth.router, prefix="/api/auth", tags=["teacher-auth"])
     app.include_router(dashboard_auth.router, tags=["dashboard-auth-v2"])
     app.include_router(games.router, prefix="/games", tags=["games"])

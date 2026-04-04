@@ -15,16 +15,29 @@ DATABASE_URL = os.getenv(
 # Agar DATABASE_URL bo'lmasa in-memory SQLite ishlatamiz (Render uchun)
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///:memory:"
-
-# PostgreSQL requires pool settings
-if "postgresql" in DATABASE_URL:
-    engine = create_engine(
-        DATABASE_URL,
-        pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
-    )
+    print("Using in-memory SQLite database")
 else:
+    print(f"Using DATABASE_URL: {DATABASE_URL[:50]}...")
+
+# Create engine based on database type
+try:
+    if "postgresql" in DATABASE_URL:
+        engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=10,
+            max_overflow=20,
+        )
+    else:
+        engine = create_engine(
+            DATABASE_URL, 
+            connect_args={"check_same_thread": False}
+        )
+except Exception as e:
+    print(f"Database engine error: {e}")
+    # Fallback to in-memory SQLite
+    print("Falling back to in-memory SQLite")
+    DATABASE_URL = "sqlite:///:memory:"
     engine = create_engine(
         DATABASE_URL, 
         connect_args={"check_same_thread": False}
