@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Check } from "lucide-react";
+import { getApiUrl } from "@/api/client";
 
 export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -46,7 +47,7 @@ export default function Settings() {
       const teacherId = localStorage.getItem("teacherId");
 
       const response = await fetch(
-        `http://localhost:8000/teacher/change-password`,
+        `${getApiUrl("/teacher/change-password")}`,
         {
           method: "POST",
           headers: {

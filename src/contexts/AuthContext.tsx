@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { getApiUrl } from "@/api/client";
 
 export interface User {
   id: string;
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:8000/login", {
+      const response = await fetch(getApiUrl("/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(async (email: string, fullName: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:8000/register", {
+      const response = await fetch(getApiUrl("/register"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

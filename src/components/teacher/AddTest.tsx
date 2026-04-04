@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getApiUrl } from "@/api/client";
 
 interface Question {
   id: string;
@@ -129,7 +130,7 @@ export default function AddTest() {
         })),
       };
 
-      const response = await fetch("http://localhost:8000/tests/create", {
+      const response = await fetch(getApiUrl("/tests/create"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

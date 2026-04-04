@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getApiUrl } from "@/api/client";
 
 interface TestItem {
   id: number;
@@ -27,7 +28,7 @@ export default function TestList() {
       const teacherId = localStorage.getItem("teacherId");
 
       const response = await fetch(
-        `http://localhost:8000/tests/list?teacher_id=${teacherId}`,
+        `${getApiUrl("/tests/list")}?teacher_id=${teacherId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -58,7 +59,7 @@ export default function TestList() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:8000/tests/delete/${testId}`,
+        `${getApiUrl("/tests/delete")}/${testId}`,
         {
           method: "DELETE",
           headers: {
