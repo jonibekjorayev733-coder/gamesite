@@ -6,6 +6,13 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 
+// Determine which directory to serve from (build or dist)
+let serveDir = 'dist';
+if (fs.existsSync(path.join(__dirname, 'build'))) {
+  serveDir = 'build';
+}
+console.log(`Serving static files from: ${serveDir}`);
+
 const mimeTypes = {
   '.html': 'text/html',
   '.js': 'application/javascript',
@@ -20,7 +27,7 @@ const mimeTypes = {
 };
 
 const server = http.createServer((req, res) => {
-  let filePath = path.join(__dirname, 'dist', req.url === '/' ? 'index.html' : req.url);
+  let filePath = path.join(__dirname, serveDir, req.url === '/' ? 'index.html' : req.url);
 
   // Serve file if it exists
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
@@ -29,7 +36,7 @@ const server = http.createServer((req, res) => {
     res.end(fs.readFileSync(filePath));
   } else {
     // Fallback to index.html for SPA routing
-    filePath = path.join(__dirname, 'dist', 'index.html');
+    filePath = path.join(__dirname, serveDir, 'index.html');
     if (fs.existsSync(filePath)) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(fs.readFileSync(filePath));
